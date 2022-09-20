@@ -1,27 +1,73 @@
 package com.example.stopwatch
 
+import android.net.wifi.rtt.CivicLocationKeys.STATE
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.PersistableBundle
 import android.os.SystemClock
 import android.util.Log
 import android.widget.Button
 import android.widget.Chronometer
+import com.example.stopwatch.MainActivity.Companion.STATE_TIME
 
 class MainActivity : AppCompatActivity() {
 
     companion object{
-        const val TAG = "MainActivity"
+        val TAG = "MainActivity"
+        val STATE_TIME = "display time"
+        val STATE_START = "is it running"
+        val STATE_OFFSET = "offset"
     }
     private lateinit var startButton: Button
     private lateinit var resetButton: Button
     private lateinit var timer: Chronometer
-
+    var offset: Long = 0L
+    var displayTime = 0L
+    var start = true
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         wireWidgets()
+
+        if(savedInstanceState!=null){
+            offset = savedInstanceState.getLong(STATE_OFFSET)
+            start=savedInstanceState.getBoolean(STATE_START)
+            displayTime=savedInstanceState.getLong(STATE_TIME)
+            Log.d(TAG,"displayTime: $displayTime start: $start offset: $offset")
+            if(start){
+                startButton.text = "start"
+                timer.base = SystemClock.elapsedRealtime()-displayTime
+                timer.stop()
+            }
+            else{
+                startButton.text = "stop"
+                timer.base = SystemClock.elapsedRealtime()-displayTime
+                timer.start()
+            }
+
+
+
+        }
+
         startstop()
     }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        if(!start) {
+            displayTime = SystemClock.elapsedRealtime() - timer.base
+        }
+        else{
+            displayTime=SystemClock.elapsedRealtime()-timer.base+offset
+        }
+        Log.d(TAG,"displayTime: $displayTime start: $start offset: $offset")
+        outState?.run {
+            putLong(STATE_TIME, displayTime)
+            putBoolean(STATE_START, start)
+            putLong(STATE_OFFSET, offset)
+        }
+        super.onSaveInstanceState(outState)
+    }
+
 
     override fun onStart() {
         super.onStart()
@@ -60,8 +106,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startstop(){
-        var offset: Long = 0L
-        var start = true
+
         startButton.setOnClickListener {
             if(start){
                 startButton.text = "stop"
@@ -71,6 +116,7 @@ class MainActivity : AppCompatActivity() {
 
             }
             else{
+
                 startButton.text = "start"
                 start = true
                 offset = timer.getBase() - SystemClock.elapsedRealtime()
