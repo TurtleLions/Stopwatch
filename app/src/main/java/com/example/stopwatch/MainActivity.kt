@@ -57,7 +57,8 @@ class MainActivity : AppCompatActivity() {
             displayTime = SystemClock.elapsedRealtime() - timer.base
         }
         else{
-            displayTime=SystemClock.elapsedRealtime()-timer.base+offset
+            timer.setBase(SystemClock.elapsedRealtime() + offset)
+            displayTime=(SystemClock.elapsedRealtime()-timer.base)
         }
         Log.d(TAG,"displayTime: $displayTime start: $start offset: $offset")
         outState?.run {
